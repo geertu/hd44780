@@ -51,7 +51,8 @@ static void calibrate_delay(void)
     printf("Calibrating delay loop.. ");
     fflush(stdout);
 
-    loops_per_sec = 1000000;
+    loops_per_sec = (1<<12);
+
     while ((loops_per_sec <<= 1)) {
 	ticks = clock();
 	delay(loops_per_sec);
@@ -265,7 +266,12 @@ static struct console lcd_console = {
 
 void lcd_init(int width)
 {
-#ifndef __KERNEL__
+#ifdef __KERNEL__
+    if (loops_per_sec == (1<<12)) {
+	printk("lcd_init: delay loop not yet calibrated\n");
+	loops_per_sec = 500000000;	/* Safe for <= 1000 BogoMIPS */
+    }
+#else /* !__KERNEL__ */
     if (loops_per_sec == 1)
 	calibrate_delay();
 #endif /* !__KERNEL__ */
