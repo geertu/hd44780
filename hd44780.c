@@ -1,4 +1,7 @@
 
+#define SCROLL_REDRAW
+#undef SCROLL_SHIFT
+
 /*
  *  Copyright 1997-2000 by Geert Uytterhoeven <geert@linux-m68k.org>
  *
@@ -81,7 +84,9 @@ static void udelay(unsigned long usecs)
 #define LCD_ROWS	4
 
 static int lcd_col = 0, lcd_row = 0;
+#ifdef SCROLL_REDRAW
 static char lcd_data[LCD_COLS*LCD_ROWS];
+#endif /* SCROLL_REDRAW */
 
 static const int lcd_row_offset[LCD_ROWS] = { 0, 64, 20, 84 };
 
@@ -104,6 +109,7 @@ static int lcd_current_width = 8;	/* The HD44780 boots up in 8-bit mode */
 
 static const struct lcd_driver *lcd_driver = NULL;
 
+static unsigned int lcd_stat_write = 0, lcd_stat_read = 0;
 
 
 void lcd_register_driver(const struct lcd_driver *driver)
@@ -118,6 +124,7 @@ void lcd_unregister_driver(const struct lcd_driver *driver)
 
 void __lcd_write(u8 val, int rs)
 {
+    lcd_stat_write++;
     if (lcd_driver->write)
 	lcd_driver->write(val, rs);
     else {
@@ -145,6 +152,7 @@ u8 __lcd_read(int rs)
 {
     u8 val;
 
+    lcd_stat_read++;
     if (lcd_driver->read)
 	val = lcd_driver->read(rs);
     else {
@@ -190,7 +198,9 @@ void lcd_clr(void)
     lcd_write_cmd(LCD_CMD_CLR);
     lcd_delay_clr();
     lcd_col = lcd_row = 0;
+#ifdef SCROLL_REDRAW
     memset(lcd_data, ' ', LCD_COLS*LCD_ROWS);
+#endif /* SCROLL_REDRAW */
 }
 
     /*
@@ -282,6 +292,8 @@ void lcd_cleanup(void)
 {
 #ifdef __KERNEL__
     unregister_console(&lcd_console);
+#else
+    printf("Statistics: %d writes, %d reads\n", lcd_stat_write, lcd_stat_read);
 #endif /* __KERNEL__ */
 
     /* Return to 8-bit mode */
@@ -305,15 +317,21 @@ static void lcd_write_vec(const char *data, unsigned int n)
 	lcd_write(*data++);
 }
 
-static void lcd_redraw(void)
+#ifdef SCROLL_REDRAW
+static void lcd_redraw_region(int sx, int sy, int width, int height)
 {
-    int i;
+    int y;
 
-    for (i = 0; i < LCD_ROWS; i++) {
-	lcd_ddram(lcd_row_offset[i]);
-	lcd_write_vec(&lcd_data[i*LCD_COLS], LCD_COLS);
+    for (y = sy; y < sy+height; y++) {
+	lcd_ddram(lcd_row_offset[y]+sx);
+	lcd_write_vec(&lcd_data[y*LCD_COLS+sx], width);
     }
     lcd_ddram(lcd_row_offset[lcd_row]+lcd_col);
+}
+
+static void lcd_redraw(void)
+{
+    lcd_redraw_region(0, 0, LCD_COLS, LCD_ROWS);
 }
 
 static void lcd_scroll_up(void)
@@ -322,6 +340,35 @@ static void lcd_scroll_up(void)
     memset(&lcd_data[(LCD_ROWS-1)*LCD_COLS], ' ', LCD_COLS);
     lcd_redraw();
 }
+#endif /* SCROLL_REDRAW */
+
+#ifdef SCROLL_SHIFT
+static int lcd_current_shift = 0;
+
+static void lcd_scroll_up(void)
+{
+    int dir, exor, i;
+
+    if (lcd_current_shift == 0) {
+	dir = LCD_SHIFT_LEFT;
+	exor = 0;
+	lcd_current_shift = 20;
+    } else {
+	dir = LCD_SHIFT_RIGHT;
+	exor = 2;
+	lcd_current_shift = 0;
+    }
+    for (i = 0; i < LCD_COLS; i++)
+	lcd_shift(LCD_SHIFT_DISP, dir);
+    lcd_ddram(lcd_row_offset[exor]);
+    for (i = 0; i < LCD_COLS; i++)
+	lcd_write(' ');
+    lcd_ddram(lcd_row_offset[1 ^ exor]);
+    for (i = 0; i < LCD_COLS; i++)
+	lcd_write(' ');
+    lcd_ddram(lcd_row_offset[lcd_row ^ exor]+lcd_col);
+}
+#endif /* SCROLL_SHIFT */
 
 #ifdef __KERNEL__
 static void lcd_blank(unsigned long data)
@@ -343,6 +390,7 @@ static void lcd_kick(void)
 }
 #endif /* !__KERNEL__ */
 
+#ifdef SCROLL_REDRAW
 void lcd_putc(char c)
 {
 #ifdef __KERNEL__
@@ -367,6 +415,33 @@ void lcd_putc(char c)
     if (lcd_col == 0)
 	lcd_ddram(lcd_row_offset[lcd_row]);
 }
+#endif /* SCROLL_REDRAW */
+
+#ifdef SCROLL_SHIFT
+void lcd_putc(char c)
+{
+#ifdef __KERNEL__
+    lcd_kick();
+#endif /* !__KERNEL__ */
+
+    if (c == '\n') {
+	lcd_col = 0;
+	lcd_row++;
+    } else {
+	lcd_write(c);
+	if (++lcd_col == LCD_COLS) {
+	    lcd_col = 0;
+	    lcd_row++;
+	}
+    }
+    if (lcd_row == LCD_ROWS) {
+	lcd_scroll_up();
+	lcd_row -= 2;
+    }
+    if (lcd_col == 0)
+	lcd_ddram(lcd_row_offset[lcd_row ^ (lcd_current_shift == 0 ? 0 : 2)]);
+}
+#endif /* SCROLL_SHIFT */
 
 void lcd_puts(const char *s)
 {
