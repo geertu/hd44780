@@ -45,6 +45,9 @@ static inline void parport_mod_control(u8 clear, u8 set)
 /* ------------------------------------------------------------------------- */
 
 
+#if 0 /* -- Custom wiring -------------------------------------------------- */
+
+
     /*
      *  Low-Level LCD Access
      *
@@ -81,6 +84,50 @@ static inline void parport_mod_control(u8 clear, u8 set)
 #define PARLCD_E_0	0
 #define PARLCD_BL_1	0
 #define PARLCD_BL_0	PARLCD_BL
+
+
+#else /* -- WinAmp wiring -------------------------------------------------- */
+
+
+    /*
+     *  Low-Level LCD Access
+     *
+     *  These are hardware dependent!
+     *
+     *  Wiring:
+     *
+     *	    LCD		Parport (8 bit)		Parport (4 bit)
+     *	    ------------------------------------------------------
+     *	    RS		*INIT			*INIT
+     *	    RW		*AUTOFD (or GND)	*AUTOFD (or GND)
+     *	    E		*STROBE			*STROBE
+     *	    Backlight	*SELECTIN		*SELECTIN
+     *	    D0		D0			-
+     *	    D1		D1			-
+     *	    D2		D2			-
+     *	    D3		D3			-
+     *	    D4		D4			D4
+     *	    D5		D5			D5
+     *	    D6		D6			D6
+     *	    D7		D7			D7
+     */
+
+#define PARLCD_RS	(PARPORT_CONTROL_INIT)
+#define PARLCD_RW	(PARPORT_CONTROL_AUTOFD)	/* inverted! */
+#define PARLCD_E	(PARPORT_CONTROL_STROBE)	/* inverted! */
+#define PARLCD_BL	(PARPORT_CONTROL_SELECT)	/* inverted! */
+
+#define PARLCD_RS_1	PARLCD_RS
+#define PARLCD_RS_0	0
+#define PARLCD_RW_1	0
+#define PARLCD_RW_0	PARLCD_RW
+#define PARLCD_E_1	0
+#define PARLCD_E_0	PARLCD_E
+#define PARLCD_BL_1	0
+#define PARLCD_BL_0	PARLCD_BL
+
+
+#endif /* ------------------------------------------------------------------ */
 
 
     /*
