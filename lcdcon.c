@@ -20,6 +20,10 @@ static const char *lcdcon_startup(void)
     return "HD44780 LCD";
 }
 
+
+// FIXME
+// Alternative using a 20x4 window on a 80x25 virtual screen?
+
 #define LCD_COLS	20
 #define LCD_ROWS	4
 
@@ -40,35 +44,69 @@ static void lcdcon_deinit(struct vc_data *conp)
 static void lcdcon_clear(struct vc_data *conp, int sy, int sx, int height,
 			 int width)
 {
-    // FIXME
+    if (sy == 0 && sx == 0 && height == LCD_ROWS && width == LCD_COLS)
+	lcd_clr();
+    else
+	for (y = sy; y < sy+height; y++) {
+	    lcd_ddram(lcd_row_offset[y]+sx);
+	    memset(&lcd_data[y*LCD_COLS+sx], ' ', width);
+	    lcd_write_vec(&lcd_data[y*LCD_COLS+sx], width);
+	}
+    lcd_ddram(lcd_row_offset[lcd_row]+lcd_col);
 }
 
 static void lcdcon_putc(struct vc_data *conp, int c, int ypos, int xpos)
 {
-    // FIXME
+    if (ypos != lcd_row || xpos != lcd_col)
+	lcd_ddram(lcd_row_offset[ypos]+xpos);
+    lcd_write(c);
+    lcd_data[ypos*LCD_COLS+xpos] = c;
+    lcd_ddram(lcd_row_offset[lcd_row]+lcd_col);
 }
 
 static void lcdcon_putcs(struct vc_data *conp, const unsigned short *s,
 			 int count, int ypos, int xpos)
 {
-    // FIXME
+    if (ypos != lcd_row || xpos != lcd_col)
+	lcd_ddram(lcd_row_offset[ypos]+xpos);
+    while (count--) {
+	lcd_write(c);
+	lcd_data[ypos*LCD_COLS+xpos++] = c;
+    }
+    lcd_ddram(lcd_row_offset[lcd_row]+lcd_col);
 }
 
 static void lcdcon_cursor(struct vc_data *conp, int mode)
 {
-    // FIXME
+    switch (mode) {
+	case CM_ERASE:
+	    lcd_ctrl(LCD_DISP_ON, LCD_CURSOR_OFF, LCD_BLINK_OFF);
+	    break;
+
+	case CM_MOVE:
+	case CM_DRAW:
+	    if (conp->vc_y != lcd_row || conp->vc_x != lcd_col) {
+		lcd_col = conp->vc_x;
+		lcd_row = conp->vc_y;
+		lcd_ddram(lcd_row_offset[lcd_row]+lcd_col);
+	    }
+	    lcd_ctrl(LCD_DISP_ON, LCD_CURSOR_ON, LCD_BLINK_ON);
+	    break;
+    }
 }
 
 static int lcdcon_scroll(struct vc_data *conp, int t, int b, int dir,
 			 int count)
 {
     // FIXME
+    // Redraw using data from scr_readw()?
 }
 
 static void lcdcon_bmove(struct vc_data *conp, int sy, int sx, int dy, int dx,
 			 int height, int width)
 {
     // FIXME
+    // Redraw using data from scr_readw()?
 }
 
 static int lcdcon_switch(struct vc_data *conp)
