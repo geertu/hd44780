@@ -2,9 +2,9 @@
 CC =		gcc
 CFLAGS =	-Wall -Wstrict-prototypes
 OFLAGS =	-O3 -fomit-frame-pointer
-KFLAGS =	-DMODULE -D__KERNEL__ -I$(USR_SRC_LINUX)/include
+KFLAGS =	-DMODULE -D__KERNEL__ -I$(KERNEL_INC)
 LFLAGS =
-USR_SRC_LINUX =	/home/geert/linux/cassiopeia-2.2.17
+KERNEL_INC =	/home/geert/linux/cassiopeia-2.2.17/include
 
 OBJS =		play.o hd44780.o parlcd.o
 KOBJS =		hd44780.ko parlcd.ko lcdcon.ko
