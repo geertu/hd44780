@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/io.h>
+#include <asm/io.h>
 #include <sys/mman.h>
 #include <sys/times.h>
 #include <time.h>
@@ -63,7 +63,7 @@ int main(int argc, char *argv[]);
      */
 
 #ifdef __powerpc__
-static unsigned long isa_io_base;
+unsigned long isa_io_base;
 static int io_fd = -1;
 
 #define REAL_ISA_IO_BASE	0xf8000000	/* for CHRP LongTrail */

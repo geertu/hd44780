@@ -1,6 +1,6 @@
 
 /*
- *  Copyright 2000 by Geert Uytterhoeven <geert@linux-m68k.org>
+ *  Copyright 2000-2001 by Geert Uytterhoeven <geert@linux-m68k.org>
  *
  *  This programs is subject to the terms and conditions of the GNU General
  *  Public License
@@ -9,18 +9,18 @@
 
 #ifdef __KERNEL__
 
-#include <asm/io.h>
+#include <asm/errno.h>
 #include <linux/ioport.h>
 #include <linux/module.h>
 #include <linux/types.h>
 
 #else /* !__KERNEL__ */
 
-#include <sys/io.h>
-
 typedef unsigned char u8;
 
 #endif /* !__KERNEL__ */
+
+#include <asm/io.h>
 
 #include "hd44780.h"
 #include "parlcd.h"

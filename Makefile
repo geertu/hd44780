@@ -4,7 +4,7 @@ CFLAGS =	-Wall -Wstrict-prototypes
 OFLAGS =	-O3 -fomit-frame-pointer
 KFLAGS =	-DMODULE -D__KERNEL__ -I$(KERNEL_INC)
 LFLAGS =
-KERNEL_INC =	/home/geert/linux/cassiopeia-2.2.17/include
+KERNEL_INC =	/home/geert/linux/linuxppc_2_4/include
 
 OBJS =		play.o hd44780.o parlcd.o
 KOBJS =		hd44780.ko parlcd.ko lcdcon.ko

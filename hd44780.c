@@ -3,7 +3,7 @@
 #undef SCROLL_SHIFT
 
 /*
- *  Copyright 1997-2000 by Geert Uytterhoeven <geert@linux-m68k.org>
+ *  Copyright 2000-2001 by Geert Uytterhoeven <geert@linux-m68k.org>
  *
  *  This programs is subject to the terms and conditions of the GNU General
  *  Public License
@@ -128,7 +128,7 @@ void lcd_unregister_driver(const struct lcd_driver *driver)
 void __lcd_write(u8 val, int rs)
 {
     lcd_stat_write++;
-    if (lcd_driver)
+    if (lcd_driver) {
 	if (lcd_driver->write)
 	    lcd_driver->write(val, rs);
 	else {
@@ -150,6 +150,7 @@ void __lcd_write(u8 val, int rs)
 	    /* Pause */
 	    lcd_delay_write();
 	}
+    }
 }
 
 u8 __lcd_read(int rs)
@@ -157,7 +158,7 @@ u8 __lcd_read(int rs)
     u8 val = 0;
 
     lcd_stat_read++;
-    if (lcd_driver)
+    if (lcd_driver) {
 	if (lcd_driver->read)
 	    val = lcd_driver->read(rs);
 	else {
@@ -179,6 +180,7 @@ u8 __lcd_read(int rs)
 	    /* Pause */
 	    lcd_delay_read();
 	}
+    }
     return val;
 }
 
@@ -267,9 +269,9 @@ static struct console lcd_console = {
 void lcd_init(int width)
 {
 #ifdef __KERNEL__
-    if (loops_per_sec == (1<<12)) {
+    if (loops_per_jiffy == (1<<12)) {
 	printk("lcd_init: delay loop not yet calibrated\n");
-	loops_per_sec = 500000000;	/* Safe for <= 1000 BogoMIPS */
+	loops_per_jiffy = 5000000;	/* Safe for <= 1000 BogoMIPS */
     }
 #else /* !__KERNEL__ */
     if (loops_per_sec == 1)

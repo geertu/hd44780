@@ -1,6 +1,6 @@
 
 /*
- *  Copyright 2000 by Geert Uytterhoeven <geert@linux-m68k.org>
+ *  Copyright 2000-2001 by Geert Uytterhoeven <geert@linux-m68k.org>
  *
  *  This programs is subject to the terms and conditions of the GNU General
  *  Public License
