@@ -6,8 +6,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <asm/io.h>
 #include <sys/mman.h>
+#include <sys/io.h>
 #include <sys/times.h>
 #include <time.h>
 #include <unistd.h>
@@ -387,15 +387,21 @@ static void Do_Goto(int argc, const char *argv[])
 
 static void Do_Font(int argc, const char *argv[])
 {
-    int i, start = 0, end = 255;
+    int i, j, start = 0, end = 255;
 
     if (argc >= 1) {
 	start = strtoul(argv[0], NULL, 0);
 	if (argc >= 2)
 	    end = strtoul(argv[1], NULL, 0);
     }
-    for (i = start; i <= end; i++)
+    j = 0;
+    for (i = start; i <= end; i++, j++) {
+	if (j == 20) {
+	    sleep(1);
+	    j = 0;
+	}
 	lcd_putc(i);
+    }
 }
 
 static void Do_Move(int argc, const char *argv[])
