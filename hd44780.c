@@ -316,6 +316,8 @@ void lcd_cleanup(void)
 
     /*
      *  LCD Text Support
+     *
+     *  FIXME: split this off in a separate lcdtext module
      */
 
 static void lcd_write_vec(const char *data, unsigned int n)
