@@ -20,18 +20,21 @@ static const char *lcdcon_startup(void)
     return "HD44780 LCD";
 }
 
+#define LCD_COLS	20
+#define LCD_ROWS	4
+
 static void lcdcon_init(struct vc_data *conp, int init)
 {
-    conp->vc_cols = 20;
-    conp->vc_rows = 4;
     conp->vc_can_do_color = 0;
-    conp->vc_complement_mask = 0x0800;
-    conp->vc_hi_font_mask = 0;
+    if (init) {
+	conp->vc_cols = LCD_COLS;
+	conp->vc_rows = LCD_ROWS;
+    } else
+	vc_resize_con(LCD_COLS, LCD_ROWS, conp->vc_num);
 }
 
 static void lcdcon_deinit(struct vc_data *conp)
 {
-    int unit = conp->vc_num;
 }
 
 static void lcdcon_clear(struct vc_data *conp, int sy, int sx, int height,
