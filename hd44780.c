@@ -16,18 +16,61 @@
 #include <linux/sched.h>
 #include <linux/console.h>
 
-#define usleep(x)	udelay((x))
-
 #else /* !__KERNEL__ */
 
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 
 #define MOD_INC_USE_COUNT	do { } while (0)
 #define MOD_DEC_USE_COUNT	do { } while (0)
 
 typedef unsigned char u8;
+
+unsigned long loops_per_sec = 1;
+unsigned long max_udelay;
+
+static void delay(unsigned long loops)
+{
+    long i;
+
+    for (i = loops; i >= 0 ; i--)
+	;
+}
+
+static void calibrate_delay(void)
+{
+    unsigned long ticks;
+
+    printf("Calibrating delay loop.. ");
+    fflush(stdout);
+
+    loops_per_sec = 1000000;
+    while ((loops_per_sec <<= 1)) {
+	ticks = clock();
+	delay(loops_per_sec);
+	ticks = clock() - ticks;
+	if (ticks >= CLOCKS_PER_SEC) {
+	    loops_per_sec = (loops_per_sec / ticks) * CLOCKS_PER_SEC;
+	    printf("ok - %lu.%02lu BogoMips\n\n", loops_per_sec/500000,
+		   (loops_per_sec/5000) % 100);
+	    max_udelay = 0xffffffff/loops_per_sec;
+	    return;
+	}
+    }
+    printf("failed\n");
+    exit(-1);
+}
+
+static void udelay(unsigned long usecs)
+{
+    while (usecs > max_udelay) {
+	delay(0xffffffff/1000000);
+	usecs -= max_udelay;
+    }
+    delay(usecs*loops_per_sec/1000000);
+}
 
 #endif /* !__KERNEL__ */
 
@@ -46,10 +89,12 @@ static const int lcd_row_offset[LCD_ROWS] = { 0, 64, 20, 84 };
 #define LCD_DELAY_STROBE_US	1
 #define LCD_DELAY_WRITE_US	37
 #define LCD_DELAY_READ_US	6
+#define LCD_DELAY_CLR		1437
 
-static inline void lcd_delay_strobe(void) { usleep(LCD_DELAY_STROBE_US); }
-static inline void lcd_delay_write(void) { usleep(LCD_DELAY_WRITE_US); }
-static inline void lcd_delay_read(void) { usleep(LCD_DELAY_READ_US); }
+static inline void lcd_delay_strobe(void) { udelay(LCD_DELAY_STROBE_US); }
+static inline void lcd_delay_write(void) { udelay(LCD_DELAY_WRITE_US); }
+static inline void lcd_delay_read(void) { udelay(LCD_DELAY_READ_US); }
+static inline void lcd_delay_clr(void) { udelay(LCD_DELAY_CLR); }
 
     /*
      *  Mid-Level LCD Access
@@ -143,8 +188,7 @@ u8 __lcd_read(int rs)
 void lcd_clr(void)
 {
     lcd_write_cmd(LCD_CMD_CLR);
-    /* Clear takes 1437 more us */
-    usleep(1437);
+    lcd_delay_clr();
     lcd_col = lcd_row = 0;
     memset(lcd_data, ' ', LCD_COLS*LCD_ROWS);
 }
@@ -205,6 +249,10 @@ static struct console lcd_console = {
 
 void lcd_init(int width)
 {
+#ifndef __KERNEL__
+    if (loops_per_sec == 1)
+	calibrate_delay();
+#endif /* !__KERNEL__ */
     MOD_INC_USE_COUNT;
 
     switch (width) {
