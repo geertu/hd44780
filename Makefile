@@ -1,6 +1,6 @@
 
 CC =		gcc
-CFLAGS =	-Wall -Wstrict-prototypes
+CFLAGS =	-Wall -Wstrict-prototypes -Werror
 OFLAGS =	-O3 -fomit-frame-pointer
 KFLAGS =	-DMODULE -D__KERNEL__ -I$(KERNEL_INC)
 LFLAGS =
