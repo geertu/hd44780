@@ -19,7 +19,7 @@
 #include <linux/sched.h>
 #include <linux/console.h>
 
-static int lcd_console_messages = 0;
+static int lcd_console_messages = 1;
 
 #else /* !__KERNEL__ */
 
@@ -257,7 +257,8 @@ static void lcd_console_write(struct console *console, const char *s,
 static struct console lcd_console = {
     name:	"hd44780",
     write:	lcd_console_write,
-    flags:	CON_PRINTBUFFER | CON_CONSDEV | CON_ENABLED,
+//  flags:	CON_PRINTBUFFER | CON_CONSDEV | CON_ENABLED,
+    flags:	CON_CONSDEV | CON_ENABLED,
     index:	-1
 };
 #endif /* __KERNEL__ */
