@@ -169,9 +169,12 @@ int init_module(void)
 	return -EBUSY;
     request_region(PARPORT_BASE, 3, "parlcd");
     parlcd_init(8);
-    lcd_puts("Welcome to your\n"
-	     "Hitachi HD44780U\n"
-	     "driving a 20x4 LCD!\n");
+#if 0
+    lcd_printf("Welcome to your\n"
+	       "Hitachi HD44780U\n"
+	       "driving a 20x4 LCD!\n"
+	       "[%d bit interface]", parlcd_bus_width);
+#endif
     return 0;
 }
 
