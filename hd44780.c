@@ -24,6 +24,7 @@ static int lcd_console_messages = 1;
 #else /* !__KERNEL__ */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
