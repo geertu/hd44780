@@ -47,7 +47,7 @@ static inline void parport_mod_control(u8 clear, u8 set)
 
     /*
      *  Low-Level LCD Access
-     *  
+     *
      *  These are hardware dependent!
      *
      *  Wiring:

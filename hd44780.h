@@ -158,7 +158,7 @@ static inline void lcd_func(int datalen, int lines, int font)
 
 static inline void lcd_cgram(u8 a)
 {
-    lcd_write_cmd(LCD_CMD_CGRAM | (a & LCD_CGRAM_MASK)); 
+    lcd_write_cmd(LCD_CMD_CGRAM | (a & LCD_CGRAM_MASK));
 }
 
 

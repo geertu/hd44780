@@ -55,7 +55,7 @@ static void lcdcon_write_vec(const char *data, unsigned int n)
 static void lcdcon_redraw_region(int sx, int sy, int width, int height)
 {
     int y;
-    
+
     for (y = sy; y < sy+height; y++) {
 	lcdcon_goto(sx, y);
 	lcdcon_write_vec(&lcdcon_data[y*LCD_COLS+sx], width);
@@ -142,7 +142,7 @@ static int lcdcon_scroll(struct vc_data *conp, int t, int b, int dir,
 	    memset(&lcdcon_data[(b-lines)*LCD_COLS], ' ', lines*LCD_COLS);
 	    lcdcon_redraw_region(0, t, LCD_COLS, b-t);
 	    break;
-	    
+
 	case SM_DOWN:
 	    memmove(&lcdcon_data[(t+lines)*LCD_COLS], &lcdcon_data[t*LCD_COLS],
 		    (b-t-lines)*LCD_COLS);

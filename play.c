@@ -76,7 +76,7 @@ static void enable_isa_io(void)
 	exit(1);
     }
     isa_io_base = (unsigned long)mmap(0, REAL_ISA_IO_SIZE,
-	    			      PROT_READ | PROT_WRITE, MAP_SHARED,
+				      PROT_READ | PROT_WRITE, MAP_SHARED,
 				      io_fd, REAL_ISA_IO_BASE);
     if (isa_io_base == (unsigned long)-1)
 	Die("mmap 0x%08x: %s", REAL_ISA_IO_BASE, strerror(errno));
@@ -624,4 +624,4 @@ int main(int argc, char **argv)
 
     return 0;
 }
- 
+
