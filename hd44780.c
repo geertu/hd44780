@@ -21,6 +21,7 @@
 #else /* !__KERNEL__ */
 
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 
 #define MOD_INC_USE_COUNT	do { } while (0)
@@ -33,7 +34,13 @@ typedef unsigned char u8;
 #include "hd44780.h"
 
 
-static int position = 0;
+#define LCD_COLS	20
+#define LCD_ROWS	4
+
+static int lcd_col = 0, lcd_row = 0;
+static char lcd_data[LCD_COLS*LCD_ROWS];
+
+static const int lcd_row_offset[LCD_ROWS] = { 0, 64, 20, 84 };
 
 
 #define LCD_DELAY_STROBE_US	1
@@ -136,9 +143,10 @@ u8 __lcd_read(int rs)
 void lcd_clr(void)
 {
     lcd_write_cmd(LCD_CMD_CLR);
-    /* FIXME: Clear takes 1437 more us */
+    /* Clear takes 1437 more us */
     usleep(1437);
-    position = 0;
+    lcd_col = lcd_row = 0;
+    memset(lcd_data, ' ', LCD_COLS*LCD_ROWS);
 }
 
     /*
@@ -148,9 +156,7 @@ void lcd_clr(void)
 void lcd_home(void)
 {
     lcd_write_cmd(LCD_CMD_HOME);
-    /* Home takes 1437 more us */
-    usleep(1437);
-    position = 0;
+    lcd_col = lcd_row = 0;
 }
 
 
@@ -220,18 +226,14 @@ void lcd_init(int width)
     lcd_clr();
 
 #ifdef __KERNEL__
-//  FIXME
-//  lcd_puts("Registering console\n");
-//  register_console(&lcd_console);
+    register_console(&lcd_console);
 #endif /* __KERNEL__ */
 }
 
 void lcd_cleanup(void)
 {
 #ifdef __KERNEL__
-//  FIXME
-//  lcd_puts("Unregistering console\n");
-//  unregister_console(&lcd_console);
+    unregister_console(&lcd_console);
 #endif /* __KERNEL__ */
 
     /* Return to 8-bit mode */
@@ -249,24 +251,28 @@ void lcd_cleanup(void)
      *  LCD Text Support
      */
 
-static void fix_position(void)
+static void lcd_write_vec(const char *data, unsigned int n)
 {
-    switch (position) {
-	/* FIXME */
-	case 20:
-	    lcd_ddram(64);
-	    break;
-	case 40:
-	    lcd_ddram(20);
-	    break;
-	case 60:
-	    lcd_ddram(84);
-	    break;
-	case 80:
-	    position = 0;
-	    lcd_ddram(0);
-	    break;
+    while (n--)
+	lcd_write(*data++);
+}
+
+static void lcd_redraw(void)
+{
+    int i;
+
+    for (i = 0; i < LCD_ROWS; i++) {
+	lcd_ddram(lcd_row_offset[i]);
+	lcd_write_vec(&lcd_data[i*LCD_COLS], LCD_COLS);
     }
+    lcd_ddram(lcd_row_offset[lcd_row]+lcd_col);
+}
+
+static void lcd_scroll_up(void)
+{
+    memmove(&lcd_data[0], &lcd_data[LCD_COLS], (LCD_ROWS-1)*LCD_COLS);
+    memset(&lcd_data[(LCD_ROWS-1)*LCD_COLS], ' ', LCD_COLS);
+    lcd_redraw();
 }
 
 #ifdef __KERNEL__
@@ -279,7 +285,7 @@ static struct timer_list timer = {
     function:	lcd_blank
 };
 
-#define LCD_BLANK_TIMEOUT	(5*HZ)
+#define LCD_BLANK_TIMEOUT	(60*HZ)
 
 static void lcd_kick(void)
 {
@@ -296,14 +302,22 @@ void lcd_putc(char c)
 #endif /* !__KERNEL__ */
 
     if (c == '\n') {
-	int i = 20-position%20;
-	while (i--)
-	    lcd_putc(' ');
+	lcd_col = 0;
+	lcd_row++;
     } else {
 	lcd_write(c);
-	position++;
-	fix_position();
+	lcd_data[lcd_row*LCD_COLS+lcd_col++] = c;
+	if (lcd_col == LCD_COLS) {
+	    lcd_col = 0;
+	    lcd_row++;
+	}
     }
+    if (lcd_row == LCD_ROWS) {
+	lcd_scroll_up();
+	lcd_row--;
+    }
+    if (lcd_col == 0)
+	lcd_ddram(lcd_row_offset[lcd_row]);
 }
 
 void lcd_puts(const char *s)
@@ -333,5 +347,6 @@ int init_module(void)
 
 void cleanup_module(void)
 {
+    del_timer(&timer);
 }
 #endif /* MODULE */
