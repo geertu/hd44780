@@ -19,6 +19,8 @@
 #include <linux/sched.h>
 #include <linux/console.h>
 
+static int lcd_console_messages = 0;
+
 #else /* !__KERNEL__ */
 
 #include <stdio.h>
@@ -88,7 +90,7 @@ static int lcd_col = 0, lcd_row = 0;
 static char lcd_data[LCD_COLS*LCD_ROWS];
 #endif /* SCROLL_REDRAW */
 
-static const int lcd_row_offset[LCD_ROWS] = { 0, 64, 20, 84 };
+static const unsigned int lcd_row_offset[LCD_ROWS] = { 0, 64, 20, 84 };
 
 
 #define LCD_DELAY_STROBE_US	1
@@ -125,55 +127,57 @@ void lcd_unregister_driver(const struct lcd_driver *driver)
 void __lcd_write(u8 val, int rs)
 {
     lcd_stat_write++;
-    if (lcd_driver->write)
-	lcd_driver->write(val, rs);
-    else {
-	lcd_driver->set_rs_rw(rs, 0);
-	if (lcd_current_width == 4) {
-	    /* Write High Nibble */
+    if (lcd_driver)
+	if (lcd_driver->write)
+	    lcd_driver->write(val, rs);
+	else {
+	    lcd_driver->set_rs_rw(rs, 0);
+	    if (lcd_current_width == 4) {
+		/* Write High Nibble */
+		lcd_driver->set_data(val);
+		lcd_driver->set_e(1);
+		lcd_delay_strobe();
+		lcd_driver->set_e(0);
+		lcd_delay_strobe();
+		/* Write Low Nibble */
+		val <<= 4;
+	    }
 	    lcd_driver->set_data(val);
 	    lcd_driver->set_e(1);
 	    lcd_delay_strobe();
 	    lcd_driver->set_e(0);
-	    lcd_delay_strobe();
-	    /* Write Low Nibble */
-	    val <<= 4;
+	    /* Pause */
+	    lcd_delay_write();
 	}
-	lcd_driver->set_data(val);
-	lcd_driver->set_e(1);
-	lcd_delay_strobe();
-	lcd_driver->set_e(0);
-	/* Pause */
-	lcd_delay_write();
-    }
 }
 
 u8 __lcd_read(int rs)
 {
-    u8 val;
+    u8 val = 0;
 
     lcd_stat_read++;
-    if (lcd_driver->read)
-	val = lcd_driver->read(rs);
-    else {
-	lcd_driver->set_rs_rw(rs, 1);
-	/* Read Byte or High Nibble */
-	lcd_driver->set_e(1);
-	lcd_delay_strobe();
-	val = lcd_driver->get_data();
-	lcd_driver->set_e(0);
-	if (lcd_current_width == 4) {
-	    val &= 0xf0;
-	    lcd_delay_strobe();
-	    /* Read Low Nibble */
+    if (lcd_driver)
+	if (lcd_driver->read)
+	    val = lcd_driver->read(rs);
+	else {
+	    lcd_driver->set_rs_rw(rs, 1);
+	    /* Read Byte or High Nibble */
 	    lcd_driver->set_e(1);
 	    lcd_delay_strobe();
-	    val |= lcd_driver->get_data() >> 4;
+	    val = lcd_driver->get_data();
 	    lcd_driver->set_e(0);
+	    if (lcd_current_width == 4) {
+		val &= 0xf0;
+		lcd_delay_strobe();
+		/* Read Low Nibble */
+		lcd_driver->set_e(1);
+		lcd_delay_strobe();
+		val |= lcd_driver->get_data() >> 4;
+		lcd_driver->set_e(0);
+	    }
+	    /* Pause */
+	    lcd_delay_read();
 	}
-	/* Pause */
-	lcd_delay_read();
-    }
     return val;
 }
 
@@ -233,7 +237,8 @@ int lcd_is_busy(u8 *addr)
 
 void lcd_backlight(int light)
 {
-    lcd_driver->set_bl(light);
+    if (lcd_driver)
+	lcd_driver->set_bl(light);
 }
 
 
@@ -284,14 +289,16 @@ void lcd_init(int width)
     lcd_clr();
 
 #ifdef __KERNEL__
-    register_console(&lcd_console);
+    if (lcd_console_messages)
+	register_console(&lcd_console);
 #endif /* __KERNEL__ */
 }
 
 void lcd_cleanup(void)
 {
 #ifdef __KERNEL__
-    unregister_console(&lcd_console);
+    if (lcd_console_messages)
+	unregister_console(&lcd_console);
 #else
     printf("Statistics: %d writes, %d reads\n", lcd_stat_write, lcd_stat_read);
 #endif /* __KERNEL__ */
@@ -329,7 +336,7 @@ static void lcd_redraw_region(int sx, int sy, int width, int height)
     lcd_ddram(lcd_row_offset[lcd_row]+lcd_col);
 }
 
-static void lcd_redraw(void)
+static inline void lcd_redraw(void)
 {
     lcd_redraw_region(0, 0, LCD_COLS, LCD_ROWS);
 }
