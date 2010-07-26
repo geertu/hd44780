@@ -1,0 +1,91 @@
+
+                      +---------------------+
+                      |   HD44780 wirings   |
+                      +---------------------+
+
+Pin    Name       Amiga       Dir    My 8-bit    My 4-bit   WinAmp + Keypad
+---   ---------   -----       ---   ---------   ---------   ---------------
+  1   *Strobe     *Strobe     OUT   Backlight   Backlight   EN
+  2    Data 0      Data 0     OUT   D0                      D0           Y0
+  3    Data 1      Data 1     OUT   D1                      D1           Y1
+  4    Data 2      Data 2     OUT   D2                      D2           Y2
+  5    Data 3      Data 3     OUT   D3                      D3           Y3
+  6    Data 4      Data 4     OUT   D4          D4          D4           Y4
+  7    Data 5      Data 5     OUT   D5          D5          D5           Y5
+  8    Data 6      Data 6     OUT   D6          D6          D6           Y6
+  9    Data 7      Data 7     OUT   D7          D7          D7           Y7
+ 10   *Ack        *Ack        IN                                         X0
+ 11    Busy        Busy       IN                                         X1
+ 12    PaperEnd    PaperEnd   IN                                         X2
+ 13    SelectIn    SelectIn   IN                                         X3
+ 14   *AutoFeed    +5V 10mA   OUT   RW          RW          RW           Y8
+ 15   *Error       Unused     IN                                         X4
+ 16   *Init       *Reset      OUT   E           E           RS           Y9
+ 17   *Select      Ground     OUT   RS          RS          Backlight
+ 18    Ground      Ground      -
+ 19    Ground      Ground      -
+ 20    Ground      Ground      -
+ 21    Ground      Ground      -
+ 22    Ground      Ground      -
+ 23    Ground      Ground      -
+ 24    Ground      Ground      -
+ 25    Ground      Ground      -
+
+
+                      +--------------------+
+                      |   Parallel Cable   |
+                      +--------------------+
+
+Pin    Name       Color          Breadboard
+---   ---------   ------------   ----------
+  1   *Strobe     Black          E1
+  2    Data 0     Brown          E2
+  3    Data 1     Red            E3
+  4    Data 2     Orange         E4
+  5    Data 3     Yellow         E5
+  6    Data 4     Green          E6
+  7    Data 5     Blue           E7
+  8    Data 6     Purple         E8
+  9    Data 7     Grey           E9
+ 10   *Ack        White          F1
+ 11    Busy       Light-Green    F2
+ 12    PaperEnd   Pink           F3
+ 13    SelectIn   Black-White    F4
+ 14   *AutoFeed   Brown-White    F5
+ 15   *Error      Red-White      F6
+ 16   *Init       Orange-White   F7
+ 17   *Select     Green-White    F8
+ 18    Ground     Blue-White     F9
+ 19    Ground     Blue-White     F9
+ 20    Ground     Blue-White     F9
+ 21    Ground     Blue-White     F9
+ 22    Ground     Blue-White     F9
+ 23    Ground     Blue-White     F9
+ 24    Ground     Blue-White     F9
+ 25    Ground     Blue-White     F9
+CASE   Shield     Transparent    -
+
+
+
+                      +-------------------+
+                      |   HD44780 cable   |
+                      +-------------------+
+
+Pin    Name         Color          Breadboard
+---   ---------     ------------   ----------
+  1    Vss          Orange-White   A50
+  2    Vdd          Orange         A51
+  3    Vo           Brown-White    A52
+  4    RS           Brown          A53
+  5    RW           Green-White    A54
+  6    E            Green          A55
+  7    DB0          Blue-White     A56
+  8    DB1          Blue           A57
+  9    DB2          Blue-White     A58
+ 10    DB3          Blue           A59
+ 11    DB4          Blue-White     A60
+ 12    DB5          Blue           A61
+ 13    DB6          Blue-White     A62
+ 14    DB7          Blue           A63
+  A    Backlight+   Orange         F63
+  K    Backlight-   White          F64
