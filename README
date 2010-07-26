@@ -1,0 +1,27 @@
+This is a Linux console driver for a HD44780 LCD connected to a PC-style
+parallel port. It supports both 4-bit and 8-bit interface mode.
+
+The code was developed and used with a 20x4 LCD connected to the parallel port
+of a standard PC and a CHRP LongTrail PowerPC box, with Linux kernel 2.2
+(early development) and 2.4, from 2000 until 2004. There's no guarantee it will
+work with more recent kernels.
+
+The console driver has a comment suggesting to use a 20x4 window on an 80x25
+virtual screen, but this has never been implemented.
+
+It consists of 4 modules:
+  - hd44780: Mid-level HD44780 LCD driver, handling the HD44780 commands
+             [kernel, user]
+  - parlcd: Low-level HD44780 driver, defining how to talk to a HD44780 LCD
+            connected to a PC-style parallel port [kernel, user]
+  - lcdcon: Standard Linux console driver for a HD44780 LCD [kernel]
+  - play: Interactive test program to talk to the HD44780 or to the raw
+          parallel port [user]
+
+Modules marked [kernel] are used inside the Linux kernel only.
+Modules marked [user] are used with the userspace test program.
+
+Have fun!
+
+Geert Uytterhoeven <geert@linux-m68k.org>
+2010-07-26
