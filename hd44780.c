@@ -34,8 +34,8 @@ static int lcd_console_messages = 1;
 
 typedef unsigned char u8;
 
-unsigned long loops_per_sec = 1;
-unsigned long max_udelay;
+static unsigned long loops_per_jiffy = 1;
+static unsigned long max_udelay;
 
 static void delay(unsigned long loops)
 {
@@ -45,6 +45,10 @@ static void delay(unsigned long loops)
 	;
 }
 
+#define HZ			100
+#define CLOCKS_PER_JIFFY	((CLOCKS_PER_SEC+HZ-1)/HZ)
+#define LPS_PREC		8
+
 static void calibrate_delay(void)
 {
     unsigned long ticks;
@@ -52,17 +56,17 @@ static void calibrate_delay(void)
     printf("Calibrating delay loop.. ");
     fflush(stdout);
 
-    loops_per_sec = (1<<12);
+    loops_per_jiffy = (1<<12);
 
-    while ((loops_per_sec <<= 1)) {
+    while ((loops_per_jiffy <<= 1)) {
 	ticks = clock();
-	delay(loops_per_sec);
+	delay(loops_per_jiffy);
 	ticks = clock() - ticks;
-	if (ticks >= CLOCKS_PER_SEC) {
-	    loops_per_sec = (loops_per_sec / ticks) * CLOCKS_PER_SEC;
-	    printf("ok - %lu.%02lu BogoMips\n\n", loops_per_sec/500000,
-		   (loops_per_sec/5000) % 100);
-	    max_udelay = 0xffffffff/loops_per_sec;
+	if (ticks >= CLOCKS_PER_JIFFY) {
+	    loops_per_jiffy = (loops_per_jiffy / ticks) * CLOCKS_PER_JIFFY;
+	    printf("ok - %lu.%02lu BogoMips\n\n", loops_per_jiffy/(500000/HZ),
+		   (loops_per_jiffy/(5000/HZ)) % 100);
+	    max_udelay = 0xffffffff/loops_per_jiffy;
 	    return;
 	}
     }
@@ -76,7 +80,7 @@ static void udelay(unsigned long usecs)
 	delay(0xffffffff/1000000);
 	usecs -= max_udelay;
     }
-    delay(usecs*loops_per_sec/1000000);
+    delay(usecs*loops_per_jiffy/(1000000/HZ));
 }
 
 #endif /* !__KERNEL__ */
@@ -272,10 +276,10 @@ void lcd_init(int width)
 #ifdef __KERNEL__
     if (loops_per_jiffy == (1<<12)) {
 	printk("lcd_init: delay loop not yet calibrated\n");
-	loops_per_jiffy = 5000000;	/* Safe for <= 1000 BogoMIPS */
+	loops_per_jiffy = 50000000;	/* Safe for <= 10000 BogoMIPS */
     }
 #else /* !__KERNEL__ */
-    if (loops_per_sec == 1)
+    if (loops_per_jiffy == 1)
 	calibrate_delay();
 #endif /* !__KERNEL__ */
     MOD_INC_USE_COUNT;
