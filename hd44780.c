@@ -42,7 +42,7 @@ static void delay(unsigned long loops)
     long i;
 
     for (i = loops; i >= 0 ; i--)
-	;
+	__asm__ __volatile__("" : : : "memory");
 }
 
 #define HZ			100
