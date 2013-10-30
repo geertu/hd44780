@@ -100,7 +100,7 @@ static const unsigned int lcd_row_offset[LCD_ROWS] = { 0, 64, 20, 84 };
 
 
 #define LCD_DELAY_STROBE_US	1
-#define LCD_DELAY_WRITE_US	37
+#define LCD_DELAY_WRITE_US	50
 #define LCD_DELAY_READ_US	6
 #define LCD_DELAY_CLR		1437
 
