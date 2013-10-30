@@ -14,13 +14,15 @@
 #include <linux/module.h>
 #include <linux/types.h>
 
+#include <asm/io.h>
+
 #else /* !__KERNEL__ */
 
 typedef unsigned char u8;
 
-#endif /* !__KERNEL__ */
+#include <sys/io.h>
 
-#include <asm/io.h>
+#endif /* !__KERNEL__ */
 
 #include "hd44780.h"
 #include "parlcd.h"
