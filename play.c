@@ -29,6 +29,8 @@ static const char *ProgramName = NULL;
 static int Verbose = 0;
 static int Dump = 0;
 
+static long clk_tck;
+
 
     /*
      *  Function Prototypes
@@ -349,7 +351,7 @@ static void Do_Hello(int argc, const char *argv[])
 	     "Hitachi HD44780U\n"
 	     "driving a 20x4 LCD!\n");
     t = times(&tms)-t;
-    lcd_printf("[%f seconds]", (double)t/CLK_TCK);
+    lcd_printf("[%f seconds]", (double)t/clk_tck);
 }
 
 static void Do_Print(int argc, const char *argv[])
@@ -623,6 +625,8 @@ int main(int argc, char **argv)
 	else
 	    Usage();
     }
+
+    clk_tck = sysconf(_SC_CLK_TCK);
 
     enable_isa_io();
 
