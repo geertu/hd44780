@@ -482,7 +482,7 @@ static const char *Binary8(u8 val)
 
 static void PrintLogicColor(int val, const char *name)
 {
-    printf("%s%s" BLACK, val ? RED : GREEN, name);
+    printf("%s%s" NORMAL, val ? RED : GREEN, name);
 }
 
 static void Do_Data(int argc, const char *argv[])
