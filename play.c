@@ -180,8 +180,11 @@ struct Command {
 static char *ReadCommandLine(void)
 {
     u_int last;
+    const char *line;
 
-    fgets(CommandLine, MAX_CMD_LINE, stdin);
+    line = fgets(CommandLine, MAX_CMD_LINE, stdin);
+    if (!line)
+	return NULL;
     last = strlen(CommandLine)-1;
     if (CommandLine[last] == '\n')
 	CommandLine[last] = '\0';
@@ -585,6 +588,8 @@ static void Interpreter(void)
     do {
 	fprintf(stderr, "play> ");
 	line = ReadCommandLine();
+	if (!line)
+	    break;
 	ParseCommandLine(line);
     } while (!Stop);
 }
